@@ -2,3 +2,12 @@
 /.gradle/
 /build/
 /build/classes/java/main/
+/.idea/.gitignore
+/.idea/compiler.xml
+/config.json
+/.idea/encodings.xml
+/.idea/gradle.xml
+/.idea/jarRepositories.xml
+/.idea/misc.xml
+/persistent.json
+/.idea/vcs.xml

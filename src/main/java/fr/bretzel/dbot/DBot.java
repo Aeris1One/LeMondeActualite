@@ -19,7 +19,7 @@ public class DBot {
 
     public static final StringEntry LAST_CHECKED_URL = new StringEntry("last checked url", "https://www.lemonde.fr/international/live/2022/02/27/guerre-en-ukraine-en-direct-l-union-europeenne-va-armer-kiev-les-occidentaux-appellent-leurs-ressortissants-a-quitter-la-russie_6115418_3210.html");
     public static final StringEntry LAST_TITLE = new StringEntry("last title", "");
-    public static final StringEntry LAST_HOUR = new StringEntry("last title", "");
+    public static final StringEntry LAST_HOUR = new StringEntry("last hour", "");
 
     public static long[] channels = new long[0];
 
@@ -63,6 +63,5 @@ public class DBot {
 
         LiveChecker checker = new LiveChecker();
         new Timer().schedule(checker, new Date(), (1000 * (60L * mainConfig.getOrAdd(REFRESH_TIMING).longValue())));
-
     }
 }
