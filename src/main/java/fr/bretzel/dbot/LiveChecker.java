@@ -29,7 +29,8 @@ public class LiveChecker extends TimerTask {
             Elements allPost = lastLiveDoc.getElementsByClass("post__live-section post-container");
             Element lastPost = allPost.first();
 
-            printPost(lastPost, lastLiveDoc);
+            if (lastPost != null)
+                printPost(lastPost, lastLiveDoc);
         } catch (IOException ignored) {
 
         }
