@@ -18,8 +18,9 @@ public class DBot {
     public static final NumberEntry REFRESH_TIMING = new NumberEntry("Refresh Rate (in minute)", 1);
 
     public static final StringEntry LAST_CHECKED_URL = new StringEntry("last checked url", "https://www.lemonde.fr/international/live/2022/02/27/guerre-en-ukraine-en-direct-l-union-europeenne-va-armer-kiev-les-occidentaux-appellent-leurs-ressortissants-a-quitter-la-russie_6115418_3210.html");
-    public static final StringEntry LAST_TITLE = new StringEntry("last title", "");
     public static final StringEntry LAST_HOUR = new StringEntry("last hour", "");
+
+    public static boolean SILENT = false;
 
     public static long[] channels = new long[0];
 
@@ -39,6 +40,13 @@ public class DBot {
     public static JDA JDA;
 
     public static void main(String[] args) throws Exception {
+        for (String arg : args) {
+            if (arg.equalsIgnoreCase("-silent")) {
+                SILENT = true;
+                break;
+            }
+        }
+
         final var token = mainConfig.getOrAdd(DISCORD_TOKEN);
         final var channelIds = mainConfig.getOrAdd(DISCORD_CHANNEL_ID);
 
@@ -59,9 +67,12 @@ public class DBot {
         JDA = JDABuilder.createDefault(token).addEventListeners(new Listener()).build();
         JDA.awaitReady();
 
-        System.out.println("[DBOT]: Starting timer for checking site LeMonde.fr");
 
-        LiveChecker checker = new LiveChecker();
-        new Timer().schedule(checker, new Date(), (1000 * (60L * mainConfig.getOrAdd(REFRESH_TIMING).longValue())));
+        if (!SILENT) {
+            System.out.println("[DBOT]: Starting timer for checking site LeMonde.fr");
+
+            LiveChecker checker = new LiveChecker();
+            new Timer().schedule(checker, new Date(), (1000 * (60L * mainConfig.getOrAdd(REFRESH_TIMING).longValue())));
+        }
     }
 }

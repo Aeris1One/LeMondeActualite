@@ -11,8 +11,6 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.TimerTask;
 
 public class LiveChecker extends TimerTask {
@@ -46,10 +44,6 @@ public class LiveChecker extends TimerTask {
             return;
         }
 
-        if (post.hasClass("post__live-container--essential")) {
-            LOGGER.debug("Detected essential post"); //TODO
-        }
-
         String mainImg = webPage.getElementsByClass("hero__live-content")
                 .first()
                 .getElementsByClass("hero__live-img")
@@ -57,7 +51,6 @@ public class LiveChecker extends TimerTask {
                 .absUrl("src");
 
         String hour = info.getElementsByClass("date").first().text().trim();
-        Element label = info.getElementsByClass("flag-live__border__label").first();
 
         Element titleElement = content_live.getElementsByClass("post__live-container--title post__space-node").first();
         String title = titleElement == null ? "" : titleElement.text().trim();
@@ -78,98 +71,104 @@ public class LiveChecker extends TimerTask {
 
         String liveUrl = DBot.persistentData.getOrAdd(DBot.LAST_CHECKED_URL);
 
-        if (label != null && label.text().equalsIgnoreCase("Vos questions")) {
-            System.out.println("Question ?");
+        if (isQuestion(content_live)) {
+            LOGGER.debug("Question is detected !");
             printQuestion(content_live, liveUrl, mainImg, hour);
+        } else if (post.hasClass("post__live-container--essential")) {
+            LOGGER.debug("Essential Detected !");
+            //printEssential(content_live, hour, mainImg, liveUrl);
         } else {
-            System.out.println("Pas question ?");
+            LOGGER.debug("Normal Message !");
             printNormalMessage(content_live, hour, title, mainImg, liveUrl);
         }
     }
 
+    public static void printEssential(Element content_live, String hour, String mainImg, String liveUrl) {
+        EmbedBuilder message = new EmbedBuilder();
+        String title = content_live.getElementsByClass("post__live-container--title post__space-node title-big").first().text();
+
+        message.setColor(Color.RED);
+        message.setTitle(hour + " - " + title);
+        message.setThumbnail(mainImg);
+
+        //TODO
+    }
+
     public static void printNormalMessage(Element content_live, String hour, String title, String mainImg, String liveUrl) {
-        List<EmbedBuilder> messages = new ArrayList<>();
+        EmbedBuilder message = new EmbedBuilder();
 
-        EmbedBuilder first = new EmbedBuilder();
-        first.setThumbnail(mainImg);
-        first.setColor(Color.LIGHT_GRAY);
-        first.setTitle(hour.trim() + " - " + title.trim(), liveUrl);
-
-        messages.add(first);
-
-        EmbedBuilder lastMessage = new EmbedBuilder();
-        lastMessage.setColor(Color.LIGHT_GRAY);
-        messages.add(lastMessage);
+        message.setThumbnail(mainImg);
+        message.setColor(Color.LIGHT_GRAY);
+        message.setTitle(hour.trim() + " - " + title.trim(), liveUrl);
 
         for (Element element : content_live.getAllElements()) {
             //Simple Text
             if (element.hasClass("post__live-container--answer-text post__space-node")) { //Simple Text
-                lastMessage.addField("", element.getElementsByClass("post__live-container--answer-text post__space-node").first().text(), false);
-            } else if (element.hasClass("post__live-container--img post__space-node") && !element.hasClass("post__live-container--link")) {//Img
-                //Todo image sa mère
-                /*EmbedBuilder message = new EmbedBuilder();
-                message.setColor(Color.LIGHT_GRAY);
-                String url = element.getElementsByClass("post__live-container--img post__space-node").first().absUrl("src");
-                message.setImage(url);
-                messages.add(message);*/
+                String msg = fixString(element.getElementsByClass("post__live-container--answer-text post__space-node").first().text().trim());
+                message.addField("", msg, false);
+            } else if (element.hasClass("post__live-container--figure")) {//Img / Artcile
+                if (element.hasClass("post__live-container--figure")) {
+                    Element figure = element.getElementsByClass("post__live-container--figure").first();
+                    if (figure != null) {
+                        for (Element figureElement : figure.getAllElements()) {
+                            if (figureElement.hasClass("post__live-container--img")) {
+                                String imgUrl = figureElement.attr("data-src");
+
+                                if (!imgUrl.isBlank() && !imgUrl.isEmpty())
+                                    message.setImage(imgUrl);
+                            }
+                        }
+                    } else {
+                        LOGGER.debug("Pas de Figure ?");
+                    }
+                } else {
+                    LOGGER.debug("Une Image ?");
+                }
             } else if (element.hasClass("post__live-container--img post__space-node")) { //Video
-                EmbedBuilder message = new EmbedBuilder();
-                String url = element.getElementsByClass("article__video-container").first().getAllElements().get(0).absUrl("src");
-                message.setImage(url);
-                messages.add(message);
+                //String url = element.getElementsByClass("article__video-container").first().getAllElements().get(0).absUrl("src");
+                //message.setImage(url);
             }
         }
 
-        for (EmbedBuilder builder : messages) {
-            Listener.channels.forEach(textChannel -> textChannel.sendMessageEmbeds(builder.build()).queue());
-        }
+        Listener.channels.forEach(textChannel -> textChannel.sendMessageEmbeds(message.build()).queue());
     }
 
-    /*
-    //TODO to normal message ^^^^^^^^^^^^^^^^^^^^^^^^
-    else if (content.hasClass("post__live-container--img post__space-node")) {
-                EmbedBuilder message = new EmbedBuilder();
-                String url = content.getElementsByClass("post__live-container--img post__space-node").first().absUrl("url");
-                message.setImage(url);
-                messages.add(message);
-            }
-     */
-
     public static void printQuestion(Element content_live, String liveUrl, String mainImg, String hour) {
-        List<EmbedBuilder> messages = new ArrayList<>();
+        EmbedBuilder message = new EmbedBuilder();
 
-        EmbedBuilder first = new EmbedBuilder();
-        first.setColor(Color.BLUE);
-        first.setTitle(hour + " - Vos Question", liveUrl);
-        first.setThumbnail(mainImg);
-        messages.add(first);
-
-        EmbedBuilder reponse = new EmbedBuilder();
-
-        reponse.setColor(Color.BLUE);
+        message.setColor(Color.BLUE);
+        message.setTitle(hour + " - Vos Question", liveUrl);
+        message.setThumbnail(mainImg);
 
         for (Element content : content_live.getAllElements()) {
             if (content.hasClass("post__live-container--comment-content")) {
-                System.out.println("Test 1");
                 String question = content.getElementsByClass("post__live-container--comment-blockquote").first().text();
                 String pseudo = content.getElementsByClass("post__live-container--comment-author").first().text();
-                EmbedBuilder message = new EmbedBuilder();
-                message.setColor(Color.BLUE);
-                message.addField(pseudo, question, false);
-
-                messages.add(message);
+                message.addField(pseudo, fixString(question), false);
             } else if (content.hasClass("post__live-container--answer-content")) {
-                System.out.println("Test 2");
                 String response = content.getElementsByClass("post__live-container--answer-text post__space-node").first().text();
-                reponse.addField("", response, false);
+                message.addField("", fixString(response), false);
             }
         }
 
-        messages.add(reponse);
+        Listener.channels.forEach(textChannel -> textChannel.sendMessageEmbeds(message.build()).queue());
+    }
 
-        for (EmbedBuilder builder : messages) {
-            Listener.channels.forEach(textChannel -> textChannel.sendMessageEmbeds(builder.build()).queue());
-        }
+    public static String fixString(String input) {
+        if (input == null || input.isEmpty() || input.isBlank())
+            return "";
+
+        String toContinue = "[...]";
+
+        if (input.length() > 1024)
+            input = input.substring(0, 1024 - toContinue.length()) + toContinue;
+
+        return input;
+    }
+
+
+    public static boolean isQuestion(Element content_live) {
+        return content_live.getAllElements().stream().anyMatch(element -> element.hasClass("post__live-container--comment-content"));
     }
 
     public Document getLastLive() throws IOException {
