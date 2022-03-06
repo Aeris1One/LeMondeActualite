@@ -103,7 +103,6 @@ public class LiveChecker extends TimerTask {
         message.setTitle(hour.trim() + " - " + title.trim(), liveUrl);
 
         for (Element element : content_live.getAllElements()) {
-            //Simple Text
             if (element.hasClass("post__live-container--answer-text post__space-node")) { //Simple Text
                 String msg = fixString(element.getElementsByClass("post__live-container--answer-text post__space-node").first().text().trim());
                 message.addField("", msg, false);
@@ -143,12 +142,20 @@ public class LiveChecker extends TimerTask {
 
         for (Element content : content_live.getAllElements()) {
             if (content.hasClass("post__live-container--comment-content")) {
-                String question = content.getElementsByClass("post__live-container--comment-blockquote").first().text();
-                String pseudo = content.getElementsByClass("post__live-container--comment-author").first().text();
-                message.addField(pseudo, fixString(question), false);
+                Element questionElement = content.getElementsByClass("post__live-container--comment-blockquote").first();
+                Element pseudoQuestion = content.getElementsByClass("post__live-container--comment-author").first();
+
+                if (questionElement != null && pseudoQuestion != null) {
+                    String question = questionElement.text();
+                    String pseudo = pseudoQuestion.text();
+                    message.addField(pseudo, fixString(question), false);
+                }
             } else if (content.hasClass("post__live-container--answer-content")) {
-                String response = content.getElementsByClass("post__live-container--answer-text post__space-node").first().text();
-                message.addField("", fixString(response), false);
+                Element element = content.getElementsByClass("post__live-container--answer-text post__space-node").first();
+                if (element != null) {
+                    String response = element.text();
+                    message.addField("", fixString(response), false);
+                }
             }
         }
 
