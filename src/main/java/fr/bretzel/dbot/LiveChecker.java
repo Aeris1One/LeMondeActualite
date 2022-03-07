@@ -20,8 +20,11 @@ public class LiveChecker extends TimerTask {
     private static String lastHour = DBot.persistentData.getOrAdd(DBot.LAST_HOUR);
     private static String mainImg = "https://www.countryflags.com/wp-content/uploads/ukraine-flag-png-large.png";
 
+    public static long lastUpdated = System.currentTimeMillis();
+
     @Override
     public void run() {
+        lastUpdated = System.currentTimeMillis();
         try {
             Document lastLiveDoc = getLastLive();
 
@@ -33,9 +36,15 @@ public class LiveChecker extends TimerTask {
 
             if (lastPost != null)
                 printPost(lastPost, lastLiveDoc);
+
+
         } catch (IOException ignored) {
 
         }
+    }
+
+    public static boolean isFullyStuck() {
+        return (System.currentTimeMillis() - lastUpdated) > 70000;
     }
 
     public static void printPost(Element post, Document webPage) {
@@ -91,15 +100,20 @@ public class LiveChecker extends TimerTask {
 
         if (isQuestion(content_live)) {
             color = Color.BLUE;
+            title = " Vos Question";
         } else if (post.hasClass("post__live-container--essential")) {
             color = Color.RED;
+            title = " L'Essentiel";
         }
 
         for (Element content : content_live.getAllElements()) {
             if (content.hasClass("post__live-container--answer-text post__space-node")) { //Simple Text
                 String msg = fixString(content.getElementsByClass("post__live-container--answer-text post__space-node").first().text().trim());
+                System.out.println("Test 1");
+                System.out.println("MSG = " + msg);
                 message.addField("", msg, false);
             } else if (content.hasClass("post__live-container--figure")) {//Img / Article
+                System.out.println("Test 2");
                 if (content.hasClass("post__live-container--figure")) {
                     Element figure = content.getElementsByClass("post__live-container--figure").first();
                     if (figure != null) {
@@ -114,6 +128,7 @@ public class LiveChecker extends TimerTask {
                     }
                 }
             } else if (content.hasClass("post__live-container--comment-content")) {
+                System.out.println("Test 3");
                 Element questionElement = content.getElementsByClass("post__live-container--comment-blockquote").first();
                 Element pseudoQuestion = content.getElementsByClass("post__live-container--comment-author").first();
 
@@ -121,12 +136,6 @@ public class LiveChecker extends TimerTask {
                     String question = questionElement.text();
                     String pseudo = pseudoQuestion.text();
                     message.addField(pseudo, fixString(question), false);
-                }
-            } else if (content.hasClass("post__live-container--answer-content")) {
-                Element element = content.getElementsByClass("post__live-container--answer-text post__space-node").first();
-                if (element != null) {
-                    String response = element.text();
-                    message.addField("", fixString(response), false);
                 }
             }
         }
@@ -178,15 +187,24 @@ public class LiveChecker extends TimerTask {
         LOGGER.debug("[DBOT]: needToRefresh Live URL = " + needToGetNewLink);
 
         if (needToGetNewLink) {
-            Element lastPost = document.getElementsByClass("post__live-section post-container").first();
+            Element lastPost = document.getElementsByClass("post post__live-container").first();
             if (lastPost != null) {
-                Element element = lastPost.getElementsByClass("post__live-container--link").get(0);
+                Element element = lastPost.getElementsByClass("post__live-container--link").first();
                 if (element != null) {
                     String newUrl = element.attr("href");
                     LOGGER.debug("[DBOT]: New Live URL = " + newUrl);
                     DBot.persistentData.set(DBot.LAST_CHECKED_URL, newUrl);
                     return getLastLive();
                 } else {
+                    for (Element ele : lastPost.getAllElements()) {
+                        if (ele.hasAttr("href")) {
+                            String possibleLink = ele.attr("href");
+                            if (possibleLink.contains("live")) {
+                                DBot.persistentData.set(DBot.LAST_CHECKED_URL, possibleLink);
+                                return getLastLive();
+                            }
+                        }
+                    }
                     LOGGER.debug("[DBOT]: Last do not have a link");
                     return null;
                 }

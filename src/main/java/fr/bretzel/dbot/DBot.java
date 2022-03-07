@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.JDABuilder;
 
 import java.util.Date;
 import java.util.Timer;
+import java.util.TimerTask;
 
 public class DBot {
 
@@ -73,6 +74,14 @@ public class DBot {
 
             LiveChecker checker = new LiveChecker();
             new Timer().schedule(checker, new Date(), (1000 * (60L * mainConfig.getOrAdd(REFRESH_TIMING).longValue())));
+
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (LiveChecker.isFullyStuck())
+                        System.exit(-1);
+                }
+            }, new Date(), 1000);
         }
     }
 }
