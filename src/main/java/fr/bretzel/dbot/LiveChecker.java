@@ -152,11 +152,23 @@ public class LiveChecker extends TimerTask {
                 for (Element listed : elements) {
                     message.addField("", listed.text(), false);
                 }
+            } else if (content.hasClass("post__live-container--citation")) {
+                Elements elements = content.getElementsByClass("post__live-container--citation");
+                for (Element ele : elements) {
+                    Elements blockQuote = ele.select("p");
+                    for (Element element : blockQuote) {
+                        message.addField("", element.text(), false);
+                    }
+                }
             }
         }
 
+        String postId = "";
+        if (post.hasAttr("data-post-id"))
+            postId = "#" + post.attr("data-post-id");
+
         message.setColor(color);
-        message.setTitle(hour.trim() + " - " + title.trim(), liveUrl);
+        message.setTitle(hour.trim() + " - " + title.trim(), liveUrl + postId);
 
         Listener.channels.forEach(textChannel -> textChannel.sendMessageEmbeds(message.build()).queue());
     }
