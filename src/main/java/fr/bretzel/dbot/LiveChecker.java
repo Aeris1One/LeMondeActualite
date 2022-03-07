@@ -101,16 +101,26 @@ public class LiveChecker extends TimerTask {
         if (isQuestion(content_live)) {
             color = Color.BLUE;
             title = " Vos Question";
-        } else if (post.hasClass("post__live-container--essential")) {
+        } else if (post.hasClass("post__live-container--essential") || post.hasAttr("data-post-essential")) {
             color = Color.RED;
             title = " L'Essentiel";
+
+            Elements elements = content_live.select("h2");
+            Element bigTitle = elements.first();
+
+            if (bigTitle != null) {
+                String msg = bigTitle.text();
+                if (msg.length() > 256) {
+                    msg = msg.substring(0, 256 - 3) + "...";
+                }
+                message.addField(msg, "", false);
+            }
         }
 
         for (Element content : content_live.getAllElements()) {
             if (content.hasClass("post__live-container--answer-text post__space-node")) { //Simple Text
                 String msg = fixString(content.getElementsByClass("post__live-container--answer-text post__space-node").first().text().trim());
                 System.out.println("Test 1");
-                System.out.println("MSG = " + msg);
                 message.addField("", msg, false);
             } else if (content.hasClass("post__live-container--figure")) {//Img / Article
                 System.out.println("Test 2");
@@ -136,6 +146,11 @@ public class LiveChecker extends TimerTask {
                     String question = questionElement.text();
                     String pseudo = pseudoQuestion.text();
                     message.addField(pseudo, fixString(question), false);
+                }
+            } else if (content.hasClass("article__unordered-list")) {
+                Elements elements = content.select("li");
+                for (Element listed : elements) {
+                    message.addField("", listed.text(), false);
                 }
             }
         }
