@@ -7,6 +7,8 @@ import fr.bretzel.config.entry.NumberEntry;
 import fr.bretzel.config.entry.StringEntry;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.Timer;
@@ -24,6 +26,8 @@ public class DBot {
     public static boolean SILENT = false;
 
     public static long[] channels = new long[0];
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBot.class);
 
     public static final Config mainConfig = new Config("config", config -> {
         config.enableFileWatch(2000);
@@ -70,10 +74,10 @@ public class DBot {
 
 
         if (!SILENT) {
-            System.out.println("[DBOT]: Starting timer for checking site LeMonde.fr");
+            LOGGER.info("[DBOT]: Starting timer for checking site LeMonde.fr");
 
             LiveChecker checker = new LiveChecker();
-            new Timer().schedule(checker, new Date(), (1000 * (60L * mainConfig.getOrAdd(REFRESH_TIMING).longValue())));
+            new Timer().schedule(checker, new Date(), (long) (1000 * (60L * mainConfig.getOrAdd(REFRESH_TIMING).doubleValue())));
 
             new Timer().schedule(new TimerTask() {
                 @Override
@@ -82,6 +86,8 @@ public class DBot {
                         System.exit(-1);
                 }
             }, new Date(), 1000);
+
+            LOGGER.info("[DBOT]: Enabled DBot V1.0 Id Fix");
         }
     }
 }

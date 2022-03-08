@@ -32,10 +32,11 @@ public class LiveChecker extends TimerTask {
                 return;
 
             Elements allPost = lastLiveDoc.getElementsByClass("post__live-section post-container");
-            Element lastPost = allPost.first();
+            Element lastPost = allPost.select("section.post__live-container").first();
 
-            if (lastPost != null)
+            if (lastPost != null) {
                 printPost(lastPost, lastLiveDoc);
+            }
 
 
         } catch (IOException ignored) {
@@ -120,10 +121,8 @@ public class LiveChecker extends TimerTask {
         for (Element content : content_live.getAllElements()) {
             if (content.hasClass("post__live-container--answer-text post__space-node")) { //Simple Text
                 String msg = fixString(content.getElementsByClass("post__live-container--answer-text post__space-node").first().text().trim());
-                System.out.println("Test 1");
                 message.addField("", msg, false);
             } else if (content.hasClass("post__live-container--figure")) {//Img / Article
-                System.out.println("Test 2");
                 if (content.hasClass("post__live-container--figure")) {
                     Element figure = content.getElementsByClass("post__live-container--figure").first();
                     if (figure != null) {
@@ -138,14 +137,18 @@ public class LiveChecker extends TimerTask {
                     }
                 }
             } else if (content.hasClass("post__live-container--comment-content")) {
-                System.out.println("Test 3");
                 Element questionElement = content.getElementsByClass("post__live-container--comment-blockquote").first();
                 Element pseudoQuestion = content.getElementsByClass("post__live-container--comment-author").first();
 
                 if (questionElement != null && pseudoQuestion != null) {
                     String question = questionElement.text();
                     String pseudo = pseudoQuestion.text();
-                    message.addField(pseudo, fixString(question), false);
+                    String msg = fixString(question);
+
+                    if (msg.isEmpty() || msg.isBlank())
+                        continue;
+
+                    message.addField(pseudo, msg, false);
                 }
             } else if (content.hasClass("article__unordered-list")) {
                 Elements elements = content.select("li");
@@ -166,6 +169,8 @@ public class LiveChecker extends TimerTask {
         String postId = "";
         if (post.hasAttr("data-post-id"))
             postId = "#" + post.attr("data-post-id");
+
+        System.out.println("Post ID = " + postId);
 
         message.setColor(color);
         message.setTitle(hour.trim() + " - " + title.trim(), liveUrl + postId);
@@ -206,9 +211,6 @@ public class LiveChecker extends TimerTask {
     public Document getLastLive() throws IOException {
         String url = DBot.persistentData.getOrAdd(DBot.LAST_CHECKED_URL);
         Document document = Jsoup.parse(new URL(url).openStream(), "UTF-8", url);
-
-        System.out.println("Check URL: " + url);
-
         boolean needToGetNewLink = needToRefreshLink(document);
 
         LOGGER.debug("[DBOT]: needToRefresh Live URL = " + needToGetNewLink);
