@@ -18,7 +18,7 @@ public class LiveChecker extends TimerTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(LiveChecker.class);
 
     private static String lastHour = DBot.persistentData.getOrAdd(DBot.LAST_HOUR);
-    private static String mainImg = "https://www.countryflags.com/wp-content/uploads/ukraine-flag-png-large.png";
+    private static String mainImg = "https://www.countryflags.com/wp-content/uploads/france-flag-png-large.png";
 
     public static long lastUpdated = System.currentTimeMillis();
 
