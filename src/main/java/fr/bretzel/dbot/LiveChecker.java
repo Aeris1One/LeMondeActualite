@@ -94,6 +94,14 @@ public class LiveChecker extends TimerTask {
     }
 
     public static void printNormalMessage(Element post, Element content_live, String hour, String title, String mainImg, String liveUrl) {
+        LOGGER.debug("Sending a message:");
+        LOGGER.debug("  - post: {}", post);
+        LOGGER.debug("  - content_live: {}", content_live);
+        LOGGER.debug("  - hour: {}", hour);
+        LOGGER.debug("  - title: {}", title);
+        LOGGER.debug("  - mainImg: {}", mainImg);
+        LOGGER.debug("  - liveUrl: {}", liveUrl);
+        
         EmbedBuilder message = new EmbedBuilder();
 
         message.setThumbnail(mainImg);
