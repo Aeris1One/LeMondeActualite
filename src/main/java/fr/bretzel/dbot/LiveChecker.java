@@ -63,6 +63,7 @@ public class LiveChecker extends TimerTask {
             if (secondMainImgElement != null) {
                 String imgUrl = secondMainImgElement.absUrl("src").trim();
                 if (!imgUrl.equalsIgnoreCase(mainImg)) {
+                    LOGGER.debug("[DBOT] Changing mainImg to : " + mainImg);
                     mainImg = imgUrl;
                 }
             }
