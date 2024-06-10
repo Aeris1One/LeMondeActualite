@@ -28,6 +28,15 @@ jar {
     }
 }
 
+shadowJar {
+    archiveClassifier.set('')
+    manifest {
+        attributes(
+            'Main-Class': 'fr.bretzel.dbot.DBot'
+        )
+    }
+}
+
 test {
     useJUnitPlatform()
 }
